@@ -1,4 +1,6 @@
 ## Makefile by phyliscr
+$(GCC) = gcc -std=c11 -Wall -Werror -Wextra
+
 .PHONY: clean all uninstall rebuild
 all: graph
 
