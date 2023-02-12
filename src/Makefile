@@ -1,5 +1,5 @@
 ## Makefile by phyliscr
-$(GCC) = gcc -std=c11 -Wall -Werror -Wextra
+GCC = gcc -std=c11 -Wall -Werror -Wextra
 
 .PHONY: clean all uninstall rebuild
 all: graph
@@ -13,7 +13,7 @@ uninstall:
 rebuild: clean uninstall all
 
 graph:
-	gcc graph.c stack.c dj.c -o ../build/graph
+	$(GCC) graph.c stack.c dj.c -o ../build/graph
 
 ## Check Block
 .PHONY: check_all clang cppcheck leaks 
