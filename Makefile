@@ -1,4 +1,5 @@
-.PHONY: clean all
+## Makefile by phyliscr
+.PHONY: clean all uninstall rebuild
 all: graph
 
 clean:
@@ -11,3 +12,19 @@ rebuild: clean uninstall all
 
 graph:
 	gcc graph.c stack.c dj.c -o ../build/graph
+
+## Check Block
+.PHONY: check_all clang cppcheck leaks 
+check_all: clang cppcheck leaks
+
+clang:
+	cp ../materials/linters/.clang-format .
+	clang-format -n *.c
+	clang-format -i *.c
+	clang-format -n *.c
+
+cppcheck:
+	cppcheck --enable=all --suppress=missingIncludeSystem *.c
+
+leaks:
+	leaks -atExit -- ../build/graph < data
