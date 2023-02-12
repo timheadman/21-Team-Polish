@@ -39,14 +39,14 @@ char_node pull_char_node(char_head *head) {
     return n;
 }
 
+int is_empty_char_stack(char_head *node) { return node->ptr == NULL; }
+
 void destroy_char_stack(char_head *node) {
     while (node->ptr != NULL) {
         pull_char_node(node);
     }
     free(node);
 }
-
-int is_empty_char_stack(char_head *node) { return node->ptr == NULL; }
 
 // ********* DIGIT STACK *********
 digit_node *new_digit_node(double num) {
@@ -84,11 +84,11 @@ digit_node pull_digit_node(digit_head *head) {
     return n;
 }
 
+int is_empty_digit_stack(digit_head *node) { return node->ptr == NULL; }
+
 void destroy_digit_stack(digit_head *node) {
     while (node->ptr != NULL) {
         pull_digit_node(node);
     }
     free(node);
 }
-
-int is_empty_digit_stack(digit_head *node) { return node->ptr == NULL; }

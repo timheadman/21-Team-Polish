@@ -13,11 +13,8 @@ int priority(char ch) {
     int result = -1;
 
     if (ch == '(') result = 0;
-
     if (ch == '+' || ch == '-') result = 1;
-
     if (ch == '*' || ch == '/') result = 2;
-
     if (ch == 's' || ch == 'c' || ch == 't' || ch == 'g' || ch == 'q' || ch == 'l') result = 3;
 
     return result;
