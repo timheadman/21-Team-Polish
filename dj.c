@@ -20,8 +20,6 @@ int priority(char ch) {
 
     if (ch == 's' || ch == 'c' || ch == 't' || ch == 'g' || ch == 'q' || ch == 'l') result = 3;
 
-    if (ch == '~') result = 4;
-
     return result;
 }
 
