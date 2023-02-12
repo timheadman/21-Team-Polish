@@ -16,6 +16,7 @@ int priority(char ch) {
     if (ch == '+' || ch == '-') result = 1;
     if (ch == '*' || ch == '/') result = 2;
     if (ch == 's' || ch == 'c' || ch == 't' || ch == 'g' || ch == 'q' || ch == 'l') result = 3;
+    if (ch == '~') result = 4;
 
     return result;
 }
@@ -48,104 +49,137 @@ double calculate(char operation, double a, double b) {
     return result;
 }
 
-char *get_string_number(char *expr, int *pos) {
-    char *str_number = NULL;
+// Getting number with lots of digits from string
+//"c(123.45)+blabla" => "123.45"
+// Tested!
+char *numberFromDigits(char *origLine, int *position) {
+    char *finalNumber = NULL;
     int size = 0;
 
-    for (; *pos < (int)strlen(expr); (*pos)++) {
-        char num = expr[*pos];
+    for (; *position < (int)strlen(origLine); (*position)++) {
+        char num = origLine[*position];
         if (is_number(num) || num == '.') {
             size++;
 
-            char *temp = (char *)realloc(str_number, sizeof(char) * size);
-            if (temp != NULL) str_number = temp;
+            char *temp = (char *)realloc(finalNumber, sizeof(char) * size);
+            // TODO - work with leaks and right "free" functions in
+            // main functions
+            if (temp != NULL) finalNumber = temp;
 
-            str_number[size - 1] = num;
+            finalNumber[size - 1] = num;
         } else {
-            (*pos)--;
+            (*position)--;
             break;
         }
     }
 
-    char *temp = (char *)realloc(str_number, sizeof(char) * ++size);
+    char *temp = (char *)realloc(finalNumber, sizeof(char) * ++size);
+    // FREE FROM LEAKS IN MAIN!!!
 
-    if (temp != NULL) str_number = temp;
-    if (str_number) str_number[size - 1] = '\0';
+    if (temp != NULL) finalNumber = temp;
+    if (finalNumber) finalNumber[size - 1] = '\0';
 
-    return str_number;
+    return finalNumber;
 }
 
-char *to_postfix(char *input_string) {
-    char *postfix_expr = malloc(strlen(input_string) * sizeof(char) * 2);
+char *toPostfix(char *origLine) {
+    char *finalLine = malloc(strlen(origLine) * sizeof(char) * 2);
     int n = 0;
     char_head *head = new_char_head();
 
-    for (int i = 0; i < (int)strlen(input_string); i++) {
-        char c = input_string[i];
+    for (int i = 0; i < (int)strlen(origLine); i++) {
+        char c = origLine[i];  // current symbol
 
-        if (is_number(c)) {
-            char *temp = get_string_number(input_string, &i);
+        // Possible cases:
+
+        // 1) Symbol is a digit => then grab all
+        // IDEA: Number until not digit(or 'x') to
+        // the final output
+
+        // 2) Symbol is an opening bracket, then
+        // IDEA: Push it to the stack
+
+        // 3) Symbol is a closing bracket
+        // IDEA: While head of the stack is not
+        // an opening bracket - from stack to the
+        // final line!
+
+        // 4) Symbol stands for operation
+        // IDEA: some operations need 2 arguments
+        // like '+', '-' and etc,
+        // some needs only one like cos, sin and etc
+        if (is_number(c)) {  // Case 1
+            char *temp = numberFromDigits(origLine, &i);
 
             for (int j = 0; j < (int)strlen(temp); j++) {
-                postfix_expr[n] = temp[j];
+                finalLine[n] = temp[j];
                 n++;
             }
 
-            postfix_expr[n] = ' ';
+            finalLine[n] = ' ';
             n++;
             free(temp);
-        } else if (c == '(') {
+        } else if (c == '(') {  // Case 2
             push_char_node(head, '(');
-        } else if (c == ')') {
+        } else if (c == ')') {  // Case 3
             while (!is_empty_char_stack(head) && head->ptr->c != '(') {
-                postfix_expr[n] = pull_char_node(head).c;
+                finalLine[n] = pull_char_node(head).c;
                 n++;
-                postfix_expr[n] = ' ';
+                finalLine[n] = ' ';
                 n++;
             }
             pull_char_node(head);
-        } else if (priority(c) != -1) {
+        } else if (priority(c) != -1) {  // case 4
             char op = c;
 
-            if (op == '-' && (i == 0 || (i > 1 && priority(input_string[i - 1]) != -1))) op = '~';
+            // If minus => check if it is suppose to change sign of the operand(unary).
+            // If it is, than change it for tilda to distinguish it from binary minus
+            if (op == '-' && (i == 0 || (i > 1 && priority(origLine[i - 1]) != -1))) op = '~';
 
+            // While priority of the opeartion at the head is above or equal to
+            // the priority of our current operation => push head to final line
             while (!is_empty_char_stack(head) && priority(head->ptr->c) >= priority(op)) {
-                postfix_expr[n] = pull_char_node(head).c;
+                finalLine[n] = pull_char_node(head).c;
                 n++;
-                postfix_expr[n] = ' ';
+                finalLine[n] = ' ';
                 n++;
             }
 
-            if (op == 'c' && input_string[i + 1] == 'o')
+            // Push operation to the stack with corrsponding letter
+            // And make shift for needed number of letters
+            // Example : 1+3 for "sqrt", 1+1 for "ln"
+            if (op == 'c' && origLine[i + 1] == 'o')
                 push_char_node(head, 'c');
-            else if (op == 'c' && input_string[i + 1] == 't')
+            else if (op == 'c' && origLine[i + 1] == 't')
                 push_char_node(head, 'g');
-            else if (op == 's' && input_string[i + 1] == 'q')
+            else if (op == 's' && origLine[i + 1] == 'q')
                 push_char_node(head, 'q');
             else if (op == 'l')
                 push_char_node(head, 'l');
-            else
+            else  // sin and tan now are unique based on their first letter
                 push_char_node(head, op);
 
-            if ((op == 's' && input_string[i + 1] == 'i') || op == 'c' || op == 't' || op == 'g')
+            // Shift for "for" cycle
+            if ((op == 's' && origLine[i + 1] == 'i') || op == 'c' || op == 't' || op == 'g')
                 i += 2;
-            else if (op == 's' && input_string[i + 1] == 'q')
+            else if (op == 's' && origLine[i + 1] == 'q')
                 i += 3;
             else if (op == 'l')
                 i += 1;
         }
     }
 
+    // Push all stack to the final line
     while (!is_empty_char_stack(head)) {
-        postfix_expr[n] = pull_char_node(head).c;
+        finalLine[n] = pull_char_node(head).c;
         n++;
     }
 
+    // Clear stack
     destroy_char_stack(head);
 
-    return postfix_expr;
+    return finalLine;
 }
-
 double dijkstra(char *postfix_string, double x) {
     digit_head *d = new_digit_head();
     int counter = 0;
@@ -155,7 +189,7 @@ double dijkstra(char *postfix_string, double x) {
 
         if (is_number(c)) {
             if (c != 'x') {
-                char *str_number = get_string_number(postfix_string, &i);
+                char *str_number = numberFromDigits(postfix_string, &i);
                 char *ptr;
                 double num = strtod(str_number, &ptr);
 

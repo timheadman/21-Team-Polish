@@ -17,7 +17,7 @@ int main() {
 
     if (input_string != NULL && !check_string(input_string)) {
         int *screen = NULL;
-        char *postfix_string = to_postfix(input_string);
+        char *postfix_string = toPostfix(input_string);
 
         fill(screen, postfix_string);
 

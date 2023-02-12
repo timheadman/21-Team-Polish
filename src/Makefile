@@ -16,17 +16,26 @@ graph:
 	$(GCC) graph.c stack.c dj.c -o ../build/graph
 
 ## Check Block
-.PHONY: check_all clang cppcheck leaks 
-check_all: clang cppcheck leaks
+.PHONY: check clang cppcheck leaks 
+check: clang cppcheck leaks
 
 clang:
+	@echo "************************************************************"
+	@echo "******************** CLANG-FORMAT **************************"
+	@echo "************************************************************"
 	cp ../materials/linters/.clang-format .
 	clang-format -n *.c
 	clang-format -i *.c
 	clang-format -n *.c
 
 cppcheck:
+	@echo "************************************************************"
+	@echo "********************** CPPCHECK ****************************"
+	@echo "************************************************************"
 	cppcheck --enable=all --suppress=missingIncludeSystem *.c
 
 leaks:
+	@echo "************************************************************"
+	@echo "************************ LEAKS *****************************"
+	@echo "************************************************************"
 	leaks -atExit -- ../build/graph < data
